@@ -16,7 +16,7 @@ namespace RoubaMonte
             Naipe = naipe;
         }
 
-    
+
     }
 
     public class Jogador
@@ -27,11 +27,11 @@ namespace RoubaMonte
         public Stack<Carta> Monte { get; private set; } = new Stack<Carta>();
         public Queue<int> Ranking { get; private set; } = new Queue<int>();
 
-     public void AtualizarQuantidadeDeCartas()
-     {
-       this.QuantidadeCartas =  Monte.Count;
-     }
-      
+        public void AtualizarQuantidadeDeCartas()
+        {
+            this.QuantidadeCartas = Monte.Count;
+        }
+
         public Jogador(string nome)
         {
             Nome = nome;
@@ -44,7 +44,7 @@ namespace RoubaMonte
             Ranking.Enqueue(posicao);
         }
 
-       
+
     }
 
     public class Jogo
@@ -54,6 +54,42 @@ namespace RoubaMonte
         private List<Carta> areaDescarte = new List<Carta>();
         private int quantidadeBaralhos;
         private string logFilePath = "log_partida.txt";
+
+        private void GerarBaralho()
+        {
+            for (int i = 0; i < quantidadeBaralhos; i++)
+            {
+                for (int j = 1; j <= 13; j++)
+                {
+                    string[] naipes = { "Copas", "Espadas", "Ouros", "Paus" };
+                    for (int k = 0; k < naipes.Length; k++)
+                    {
+                        monteCompra.Push(new Carta(j, naipes[k]));
+                    }
+                }
+            }
+        }
+
+        private void EmbaralharCartas()
+        {
+
+            List<Carta> temp = new List<Carta>();
+
+            foreach(Carta carta in monteCompra) { temp.Add(carta); }
+            monteCompra.Clear();
+
+            Random RandomizarCartas = new Random();
+
+
+            while (temp.Count > 0)
+            {
+                int index = RandomizarCartas.Next(temp.Count);
+                monteCompra.Push(temp[index]);
+                temp.RemoveAt(index);
+            }
+
+        }
+
 
         public void Iniciar()
         {
@@ -70,16 +106,16 @@ namespace RoubaMonte
                 jogadores.Add(new Jogador(nome));
             }
 
-        
         }
 
 
-    class Program
-    {
-        static void Main()
+        class Program
         {
-            Jogo jogo = new Jogo();
-          
+            static void Main()
+            {
+                Jogo jogo = new Jogo();
+
+            }
         }
     }
 }
