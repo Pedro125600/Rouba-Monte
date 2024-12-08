@@ -43,17 +43,37 @@ namespace RoubaMonte
                 return $"Carta inválida ({Numero} de {Naipe})";
             }
         }
-    
 
-}
+
+    }
 
     public class Jogador
     {
         public string Nome { get; set; }
         public int Posicao { get; set; }
         public int QuantidadeCartas;
+
+      
+        public Fila rankingUltimas5Partidas { get; set; } // Usando a fila personalizada
+
+        public void AdicionarRanking()
+        {
+            // Insere o resultado e mantém apenas os últimos 5
+            if (rankingUltimas5Partidas.Tamanho() == 5)
+            {
+                rankingUltimas5Partidas.Remover(); // Remove o mais antigo
+            }
+            rankingUltimas5Partidas.Inserir(Posicao);
+        }
+
+        public void MostrarRanking()
+        {
+            Console.WriteLine("Ranking das últimas 5 partidas:");
+            rankingUltimas5Partidas.Mostrar();
+        }
+
         public Stack<Carta> Monte { get; private set; } = new Stack<Carta>();
-  
+
 
         public void AtualizarQuantidadeDeCartas()// UM metodo qe fiz para contar a quantidade de cartas a toda rodada dos jogadores e ir atualizando o rakimg mas ainda não fiz o ranking 
         {
@@ -63,6 +83,7 @@ namespace RoubaMonte
         public Jogador(string nome)
         {
             Nome = nome;
+            rankingUltimas5Partidas = new Fila();
         }
 
 
@@ -77,21 +98,27 @@ namespace RoubaMonte
     public class Jogo
     {
         private List<Jogador> jogadores = new List<Jogador>();
-        private Stack<Carta> monteCompra = new Stack<Carta>();
+        private Pilha monteCompra;
         private List<Carta> areaDescarte = new List<Carta>();
-        private int quantidadeBaralhos; 
+        private int quantidadeBaralhos;
         private int quantidadeJogadores;
         private string logFilePath = "log_partida.txt";
 
-        public Jogo(int quantidadeJogadores, int quantidadeBaralhos)// Inicializar jogo 
+
+        public Jogo(List<Jogador> jogadores, int quantidadeBaralhos)
         {
-            this.quantidadeJogadores = quantidadeJogadores;
+            this.jogadores = jogadores;
             this.quantidadeBaralhos = quantidadeBaralhos;
+            int tamanhoMonte = quantidadeBaralhos * 52; //Numero de cartas do baralho veses o numero de baralhos 
+            monteCompra = new Pilha(tamanhoMonte);
         }
+
 
 
         private void GerarBaralho()
         {
+
+
             for (int i = 0; i < quantidadeBaralhos; i++)
             {
                 for (int j = 1; j <= 13; j++)
@@ -107,35 +134,37 @@ namespace RoubaMonte
 
         private void EmbaralharCartas()
         {
-
             List<Carta> temp = new List<Carta>();
 
-            foreach(Carta carta in monteCompra) { temp.Add(carta); }
-            monteCompra.Clear();
+            // Adiciona as cartas da pilha na lista temporária
+            while (monteCompra.topo > 0)
+            {
+                temp.Add(monteCompra.Pop());
+            }
 
-            Random RandomizarCartas = new Random();
-            // Cruia uma lista coiloca as cartas nela e faz um randon do tamanho da lista e a cada saida retira 1 deste tamanho 
-
+            // Embaralha as cartas
+            Random randomizarCartas = new Random();
             while (temp.Count > 0)
             {
-                int index = RandomizarCartas.Next(temp.Count);
+                int index = randomizarCartas.Next(temp.Count);
                 monteCompra.Push(temp[index]);
                 temp.RemoveAt(index);
             }
-
         }
 
+        public void LimparMontesDosJogadores()
+        {
+            foreach (var jogador in jogadores)
+            {
+                jogador.Monte.Clear(); // Limpa o monte do jogador
+            }
+            Console.WriteLine("Montes dos jogadores foram limpos.");
+        }
 
         public void Iniciar()
         {
-            // Adiciona os jogadores e coloca nome 
 
-            for (int i = 1; i <= quantidadeJogadores; i++)
-            {
-                Console.Write($"Nome do jogador {i}: ");
-                string nome = Console.ReadLine();
-                jogadores.Add(new Jogador(nome));
-            }
+            LimparMontesDosJogadores();
 
             GerarBaralho();
             EmbaralharCartas();
@@ -154,7 +183,7 @@ namespace RoubaMonte
             {
                 Console.Write($"{carta.DescreverCarta()}, ");
             }
-            Console.WriteLine(); 
+            Console.WriteLine();
 
             Console.WriteLine($"Carta da vez: {cartaDaVez.DescreverCarta()}");
 
@@ -168,7 +197,7 @@ namespace RoubaMonte
             Console.WriteLine("Carta no topo de outros jogadores:");
             MostrarCartasTopo(jogador);
 
-            Console.WriteLine(); 
+            Console.WriteLine();
 
 
             Console.WriteLine("\nPressione Enter para continuar...");
@@ -176,11 +205,11 @@ namespace RoubaMonte
         }
 
 
-        private void JogarPartida()//Iniciar partida com o log de partidas para salvar em um arquivio 
+        private void JogarPartida() // Iniciar partida com o log de partidas para salvar em um arquivo 
         {
             using (var writer = new StreamWriter(logFilePath))
             {
-                writer.WriteLine($"Partida iniciada com {jogadores.Count} jogadores e {monteCompra.Count} cartas no monte de compra.");
+                writer.WriteLine($"Partida iniciada com {jogadores.Count} jogadores e {monteCompra.ContarCartas()} cartas no monte de compra.");
                 writer.Write("Jogadores: ");
                 foreach (var jogador in jogadores)
                 {
@@ -193,40 +222,47 @@ namespace RoubaMonte
                 writer.WriteLine(); // Finaliza a linha
 
                 int jogadorAtual = 0;
-                while (monteCompra.Count > 0) // Aqui e como se iniciase mesmo fica nesse whilw ate o monte de compras acabar ou seja o jogo acaba 
+                while (monteCompra.ContarCartas() > 0) // Continua até o monte de compras acabar
                 {
                     Jogador jogador = jogadores[jogadorAtual];
-                    Carta cartaDaVez = monteCompra.Pop();
 
-                    // Exibe cartas no topo do jogador 
-                    MostrarCartasTopo(jogador);
-
-                    // Se o jogador não tiver nenhuma carta pega a carta da vez e pula para o proximo so adicionando a carta para o jogadpr 
-                    if (jogador.Monte.Count == 0)
+                    bool continuarJogando;
+                    do
                     {
-                        jogador.Monte.Push(cartaDaVez);
-                        Console.WriteLine($"{jogador.Nome} não tinha cartas. Pegou a carta {cartaDaVez.DescreverCarta()} e passou a vez.");
-                        writer.WriteLine($"{jogador.Nome} não tinha cartas. Pegou a carta {cartaDaVez.DescreverCarta()} e passou a vez.");
+                        Carta cartaDaVez = monteCompra.Pop();
 
-                        // Passa para o próximo jogador
-                        jogadorAtual = (jogadorAtual + 1) % jogadores.Count;
-                    }
-                    else
-                    {
-                        // Exibe estado atual
-                        ExibirEstadoAtual(jogador, cartaDaVez);
-                        writer.WriteLine($"{jogador.Nome} retirou a carta {cartaDaVez}.");
+                        // Exibe cartas no topo do jogador 
+                        MostrarCartasTopo(jogador);
 
-                        // Processa a jogada
-                        if (!ProcessarJogada(jogador, cartaDaVez, writer))// processa a jogado e se o valor vier false entra no if para descartas 
+                        // Se o jogador não tiver nenhuma carta, pega a carta da vez e passa para o próximo
+                        if (jogador.Monte.Count == 0)
                         {
-                            areaDescarte.Add(cartaDaVez);
-                            writer.WriteLine($"{jogador.Nome} descartou a carta {cartaDaVez}.");
-                        }
+                            jogador.Monte.Push(cartaDaVez);
+                            Console.WriteLine($"{jogador.Nome} não tinha cartas. Pegou a carta {cartaDaVez.DescreverCarta()} e passou a vez.");
+                            writer.WriteLine($"{jogador.Nome} não tinha cartas. Pegou a carta {cartaDaVez.DescreverCarta()} e passou a vez.");
 
-                        // Passa para o próximo jogador
-                        jogadorAtual = (jogadorAtual + 1) % jogadores.Count;
-                    }
+                            continuarJogando = false; // Não continua jogando
+                        }
+                        else
+                        {
+                            // Exibe estado atual
+                            ExibirEstadoAtual(jogador, cartaDaVez);
+                            writer.WriteLine($"{jogador.Nome} retirou a carta {cartaDaVez.DescreverCarta()}.");
+
+                            // Processa a jogada
+                            continuarJogando = ProcessarJogada(jogador, cartaDaVez, writer);
+
+                            // Se a jogada não for válida, descarta a carta
+                            if (!continuarJogando)
+                            {
+                                areaDescarte.Add(cartaDaVez);
+                                writer.WriteLine($"{jogador.Nome} descartou a carta {cartaDaVez.DescreverCarta()}.");
+                            }
+                        }
+                    } while (continuarJogando && monteCompra.ContarCartas() > 0); // Continua enquanto a jogada permitir e houver cartas no monte
+
+                    // Passa para o próximo jogador
+                    jogadorAtual = (jogadorAtual + 1) % jogadores.Count;
                 }
 
                 DeterminarVencedores(writer);
@@ -235,9 +271,11 @@ namespace RoubaMonte
 
 
 
+
+
         private void MostrarCartasTopo(Jogador jogadorAtual)
         {
-           
+
             Console.Write($"Carta no topo do monte de {jogadorAtual.Nome}: ");
             if (jogadorAtual.Monte.Count != 0)
             {
@@ -317,12 +355,15 @@ namespace RoubaMonte
             Console.WriteLine("Ranking Final:");
             for (int i = 0; i < jogadores.Count; i++)
             {
+
                 jogadores[i].Posicao = i + 1;
                 Console.WriteLine(jogadores[i].DescreverJogador());
+                jogadores[i].AdicionarRanking();
+
             }
         }
 
-    private bool ProcessarJogada(Jogador jogador, Carta cartaDaVez, StreamWriter writer)
+        private bool ProcessarJogada(Jogador jogador, Carta cartaDaVez, StreamWriter writer)
         {
             // 1. Verifica se pode roubar o monte de outro jogador
             Jogador monteParaRoubar = null;
@@ -348,7 +389,7 @@ namespace RoubaMonte
 
             if (monteParaRoubar != null)//Entra se tiver algum monte que o jogador pode roubar 
             {
-                while (monteParaRoubar.Monte.Count == 0)
+                while (monteParaRoubar.Monte.Count != 0)
                 {
                     jogador.Monte.Push(monteParaRoubar.Monte.Pop());
                 }
@@ -384,54 +425,194 @@ namespace RoubaMonte
             {
                 jogador.Monte.Push(cartaDaVez);
                 jogador.AtualizarQuantidadeDeCartas();
-                Console.WriteLine($"{jogador.Nome} adicionou a carta {cartaDaVez} ao próprio monte.");
-                writer.WriteLine($"{jogador.Nome} adicionou a carta {cartaDaVez} ao próprio monte.");
+                Console.WriteLine($"{jogador.Nome} adicionou a carta {cartaDaVez.DescreverCarta()} ao próprio monte.");
+                writer.WriteLine($"{jogador.Nome} adicionou a carta {cartaDaVez.DescreverCarta()} ao próprio monte.");
                 return true;
             }
 
             return false;
         }
 
-      
 
+    }
 
         class Program
         {
             static void Main()
             {
-                bool continuarJogo = true;
 
-                while (continuarJogo)
+            List<Jogador> jogadores = new List<Jogador>();
+            bool continuarJogo = true;
+
+            while (continuarJogo)
+            {
+                if (jogadores.Count == 0)
                 {
+                    // Solicita a quantidade de jogadores apenas na primeira vez
                     Console.WriteLine("Quantos jogadores participarão?");
                     int quantidadeJogadores = int.Parse(Console.ReadLine());
-                   
+
                     while (quantidadeJogadores <= 0)
                     {
                         Console.WriteLine("Por favor, insira um número válido de jogadores (maior que 0).");
                         quantidadeJogadores = int.Parse(Console.ReadLine());
                     }
 
-                    Console.WriteLine("Quantos baralhos serão usados?");
-                    int quantidadeBaralhos= int.Parse(Console.ReadLine());
-                    while (quantidadeBaralhos <= 0)
+                    // Cria os jogadores
+                    for (int i = 1; i <= quantidadeJogadores; i++)
                     {
-                        Console.WriteLine("Por favor, insira um número válido de baralhos (maior que 0).");
-                        quantidadeBaralhos = int.Parse(Console.ReadLine());
+                        Console.Write($"Nome do jogador {i}: ");
+                        string nome = Console.ReadLine();
+                        jogadores.Add(new Jogador(nome));
                     }
-
-                    Jogo jogo = new Jogo(quantidadeJogadores, quantidadeBaralhos);
-                    jogo.Iniciar();
-
-
-                    Console.WriteLine("Deseja iniciar um novo jogo? (s/n)");
-                    string resposta = Console.ReadLine();
-                    if(resposta != "s")
-                        continuarJogo=false;
                 }
 
+                Console.WriteLine("Quantos baralhos serão usados?");
+                int quantidadeBaralhos = int.Parse(Console.ReadLine());
+                while (quantidadeBaralhos <= 0)
+                {
+                    Console.WriteLine("Por favor, insira um número válido de baralhos (maior que 0).");
+                    quantidadeBaralhos = int.Parse(Console.ReadLine());
+                }
+
+                // Inicia um novo jogo com os jogadores existentes e a nova quantidade de baralhos
+                Jogo jogo = new Jogo(jogadores, quantidadeBaralhos);
+                jogo.Iniciar();
+                Console.Clear();
+
+                Console.WriteLine("Deseja iniciar um novo jogo? (s/n)");
+                string resposta = Console.ReadLine().ToLower();
+
+                while (resposta != "s" && resposta != "n")
+                {
+                    Console.WriteLine("Resposta inválida. Por favor, digite 's' para sim ou 'n' para não.");
+                    resposta = Console.ReadLine().ToLower();
+                }
+
+                if (resposta != "s")
+                    continuarJogo = false;
 
             }
+
+            Console.Clear();
+            Console.WriteLine("Escolha um jogador para mostrar o ranking das últimas 5 partidas:");
+            for (int i = 0; i < jogadores.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {jogadores[i].Nome}");
+            }
+
+            int escolha = int.Parse(Console.ReadLine());
+            Console.WriteLine($"Mostrando o ranking das últimas 5 partidas do jogador: {jogadores[escolha - 1].Nome}");
+            jogadores[escolha - 1].MostrarRanking();
         }
     }
+    
+ public   class Pilha
+    {
+        private Carta[] array;
+        public int topo;
+
+        public Pilha(int tamanho)
+        {
+            topo = 0;
+            array = new Carta[tamanho];
+        }
+
+
+        public void Push(Carta carta)
+        {
+            if (topo >= array.Length)
+                throw new Exception("Erro!");
+
+            array[topo] = carta;
+            topo++;
+        }
+
+        public int ContarCartas()
+        {
+            return topo;
+        }
+
+        public Carta Pop()
+        {
+            if (topo == 0)
+                throw new Exception("Erro!");
+
+            topo = topo - 1;
+            return array[topo];
+        }
+
+    }
+
+
+   public class Celula
+    {
+        private int elemento;
+        private Celula prox;
+        public Celula(int elemento)
+        {
+            this.elemento = elemento;
+            this.prox = null;
+        }
+        public Celula()
+        {
+            this.elemento = 0;
+            this.prox = null;
+        }
+        public Celula Prox
+        {
+            get { return prox; }
+            set { prox = value; }
+        }
+        public int Elemento
+        {
+            get { return elemento; }
+            set { elemento = value; }
+        }
+    }
+    public class Fila
+    {
+        private Celula primeiro, ultimo;
+        private int tamanho;
+        public Fila()
+        {
+            primeiro = new Celula();
+            ultimo = primeiro;
+        }
+
+        public void Inserir(int x)
+        {
+            ultimo.Prox = new Celula(x);
+            ultimo = ultimo.Prox;
+        }
+
+        public int Remover()
+        {
+            if (primeiro == ultimo)
+                throw new Exception("Erro!");
+            Celula tmp = primeiro;
+            primeiro = primeiro.Prox;
+            int elemento = primeiro.Elemento;
+            tmp.Prox = null;
+            tmp = null;
+            return elemento;
+        }
+
+        public void Mostrar()
+        {
+            Console.Write("[");
+            for (Celula i = primeiro.Prox; i != null; i = i.Prox)
+            {
+                Console.Write(i.Elemento + " ");
+            }
+            Console.WriteLine("]");
+        }
+
+         public int Tamanho()
+    {
+        return tamanho;
+    }
+
+    }
 }
+
