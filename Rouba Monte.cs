@@ -16,7 +16,7 @@ namespace RoubaMonte
             Naipe = naipe;
         }
 
-        public string DescreverCarta() 
+        public string DescreverCarta()
         {
             if (Numero == 1)
             {
@@ -53,14 +53,14 @@ namespace RoubaMonte
         public int Posicao { get; set; }
         public int QuantidadeCartas;
 
-      
-        public Fila rankingUltimas5Partidas { get; set; } 
+
+        public Fila rankingUltimas5Partidas { get; set; }
 
         public void AdicionarRanking()
         {
             if (rankingUltimas5Partidas.Tamanho() == 5)
             {
-                rankingUltimas5Partidas.Remover(); 
+                rankingUltimas5Partidas.Remover();
             }
             rankingUltimas5Partidas.Inserir(Posicao);
         }
@@ -74,7 +74,7 @@ namespace RoubaMonte
         public Stack<Carta> Monte { get; private set; } = new Stack<Carta>();
 
 
-        public void AtualizarQuantidadeDeCartas() 
+        public void AtualizarQuantidadeDeCartas()
         {
             this.QuantidadeCartas = Monte.Count;
         }
@@ -87,7 +87,7 @@ namespace RoubaMonte
 
 
 
-        public string DescreverJogador() 
+        public string DescreverJogador()
         {
             return Posicao + "º lugar: " + Nome + " com " + QuantidadeCartas + " cartas.";
         }
@@ -108,7 +108,7 @@ namespace RoubaMonte
         {
             this.jogadores = jogadores;
             this.quantidadeBaralhos = quantidadeBaralhos;
-            int tamanhoMonte = quantidadeBaralhos * 52; 
+            int tamanhoMonte = quantidadeBaralhos * 52;
             monteCompra = new Pilha(tamanhoMonte);
         }
 
@@ -135,7 +135,7 @@ namespace RoubaMonte
         {
             List<Carta> temp = new List<Carta>();
 
-            
+
             while (monteCompra.topo > 0)
             {
                 temp.Add(monteCompra.Pop());
@@ -154,7 +154,7 @@ namespace RoubaMonte
         {
             foreach (var jogador in jogadores)
             {
-                jogador.Monte.Clear(); 
+                jogador.Monte.Clear();
             }
             Console.WriteLine("Montes dos jogadores foram limpos.");
         }
@@ -203,16 +203,16 @@ namespace RoubaMonte
         }
 
 
-        private void JogarPartida() 
+        private void JogarPartida()
         {
-            using (var writer = new StreamWriter(logFilePath))
+            using (var writer = new StreamWriter(logFilePath, append: true))
             {
                 writer.WriteLine($"Partida iniciada com {jogadores.Count} jogadores e {monteCompra.ContarCartas()} cartas no monte de compra.");
                 writer.Write("Jogadores: ");
                 foreach (var jogador in jogadores)
                 {
                     writer.Write(jogador.Nome);
-                    if (jogador != jogadores.Last()) 
+                    if (jogador != jogadores.Last())
                     {
                         writer.Write(", ");
                     }
@@ -237,7 +237,7 @@ namespace RoubaMonte
                             Console.WriteLine($"{jogador.Nome} não tinha cartas. Pegou a carta {cartaDaVez.DescreverCarta()} e passou a vez.");
                             writer.WriteLine($"{jogador.Nome} não tinha cartas. Pegou a carta {cartaDaVez.DescreverCarta()} e passou a vez.");
 
-                            continuarJogando = false; 
+                            continuarJogando = false;
                         }
                         else
                         {
@@ -252,7 +252,7 @@ namespace RoubaMonte
                                 writer.WriteLine($"{jogador.Nome} descartou a carta {cartaDaVez.DescreverCarta()}.");
                             }
                         }
-                    } while (continuarJogando && monteCompra.ContarCartas() > 0);                    
+                    } while (continuarJogando && monteCompra.ContarCartas() > 0);
 
                     jogadorAtual = (jogadorAtual + 1) % jogadores.Count;
                 }
@@ -312,7 +312,7 @@ namespace RoubaMonte
                 if (jogador.QuantidadeCartas > maiorMonte)
                 {
                     maiorMonte = jogador.QuantidadeCartas;
-                    vencedores.Clear(); 
+                    vencedores.Clear();
                     vencedores.Add(jogador);
                 }
                 else if (jogador.QuantidadeCartas == maiorMonte)
@@ -371,7 +371,7 @@ namespace RoubaMonte
                 }
             }
 
-            if (monteParaRoubar != null) 
+            if (monteParaRoubar != null)
             {
                 while (monteParaRoubar.Monte.Count != 0)
                 {
@@ -393,7 +393,7 @@ namespace RoubaMonte
                     break;
                 }
             }
-            if (cartaDescarte != null) 
+            if (cartaDescarte != null)
             {
                 jogador.Monte.Push(cartaDescarte);
                 areaDescarte.Remove(cartaDescarte);
@@ -418,10 +418,10 @@ namespace RoubaMonte
 
     }
 
-        class Program
+    class Program
+    {
+        static void Main()
         {
-            static void Main()
-            {
 
             List<Jogador> jogadores = new List<Jogador>();
             bool continuarJogo = true;
@@ -457,7 +457,7 @@ namespace RoubaMonte
 
                 Jogo jogo = new Jogo(jogadores, quantidadeBaralhos);
                 jogo.Iniciar();
-                Console.Clear();
+              
 
                 Console.WriteLine("Deseja iniciar um novo jogo? (s/n)");
                 string resposta = Console.ReadLine().ToLower();
@@ -473,7 +473,6 @@ namespace RoubaMonte
 
             }
 
-            Console.Clear();
             Console.WriteLine("Escolha um jogador para mostrar o ranking das últimas 5 partidas:");
             for (int i = 0; i < jogadores.Count; i++)
             {
@@ -483,11 +482,11 @@ namespace RoubaMonte
             int escolha = int.Parse(Console.ReadLine());
             Console.WriteLine($"Mostrando o ranking das últimas 5 partidas do jogador: {jogadores[escolha - 1].Nome}");
             jogadores[escolha - 1].MostrarRanking();
-            Console.ReadLine(); 
+            Console.ReadLine();
         }
     }
-    
- public   class Pilha
+
+    public class Pilha
     {
         private Carta[] array;
         public int topo;
@@ -525,7 +524,7 @@ namespace RoubaMonte
     }
 
 
-   public class Celula
+    public class Celula
     {
         private int elemento;
         private Celula prox;
@@ -588,10 +587,10 @@ namespace RoubaMonte
             Console.WriteLine("]");
         }
 
-         public int Tamanho()
-    {
-        return tamanho;
-    }
+        public int Tamanho()
+        {
+            return tamanho;
+        }
 
     }
 }
@@ -601,4 +600,3 @@ namespace RoubaMonte
 
 
 
-   
