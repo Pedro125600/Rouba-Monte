@@ -16,7 +16,7 @@ namespace RoubaMonte
             Naipe = naipe;
         }
 
-        public string DescreverCarta() // Para na hora de chamar os numeros aparecerem como AS,REi, etc
+        public string DescreverCarta() 
         {
             if (Numero == 1)
             {
@@ -54,14 +54,13 @@ namespace RoubaMonte
         public int QuantidadeCartas;
 
       
-        public Fila rankingUltimas5Partidas { get; set; } // Usando a fila personalizada
+        public Fila rankingUltimas5Partidas { get; set; } 
 
         public void AdicionarRanking()
         {
-            // Insere o resultado e mantém apenas os últimos 5
             if (rankingUltimas5Partidas.Tamanho() == 5)
             {
-                rankingUltimas5Partidas.Remover(); // Remove o mais antigo
+                rankingUltimas5Partidas.Remover(); 
             }
             rankingUltimas5Partidas.Inserir(Posicao);
         }
@@ -75,7 +74,7 @@ namespace RoubaMonte
         public Stack<Carta> Monte { get; private set; } = new Stack<Carta>();
 
 
-        public void AtualizarQuantidadeDeCartas()// UM metodo qe fiz para contar a quantidade de cartas a toda rodada dos jogadores e ir atualizando o rakimg mas ainda não fiz o ranking 
+        public void AtualizarQuantidadeDeCartas() 
         {
             this.QuantidadeCartas = Monte.Count;
         }
@@ -88,7 +87,7 @@ namespace RoubaMonte
 
 
 
-        public string DescreverJogador()//So e usado no final para aparecer os rankings 
+        public string DescreverJogador() 
         {
             return Posicao + "º lugar: " + Nome + " com " + QuantidadeCartas + " cartas.";
         }
@@ -109,7 +108,7 @@ namespace RoubaMonte
         {
             this.jogadores = jogadores;
             this.quantidadeBaralhos = quantidadeBaralhos;
-            int tamanhoMonte = quantidadeBaralhos * 52; //Numero de cartas do baralho veses o numero de baralhos 
+            int tamanhoMonte = quantidadeBaralhos * 52; 
             monteCompra = new Pilha(tamanhoMonte);
         }
 
@@ -136,13 +135,12 @@ namespace RoubaMonte
         {
             List<Carta> temp = new List<Carta>();
 
-            // Adiciona as cartas da pilha na lista temporária
+            
             while (monteCompra.topo > 0)
             {
                 temp.Add(monteCompra.Pop());
             }
 
-            // Embaralha as cartas
             Random randomizarCartas = new Random();
             while (temp.Count > 0)
             {
@@ -156,7 +154,7 @@ namespace RoubaMonte
         {
             foreach (var jogador in jogadores)
             {
-                jogador.Monte.Clear(); // Limpa o monte do jogador
+                jogador.Monte.Clear(); 
             }
             Console.WriteLine("Montes dos jogadores foram limpos.");
         }
@@ -173,7 +171,7 @@ namespace RoubaMonte
 
         }
 
-        private void ExibirEstadoAtual(Jogador jogador, Carta cartaDaVez)//Metodo para exibir o estado do jogador que esta jogando 
+        private void ExibirEstadoAtual(Jogador jogador, Carta cartaDaVez)
         {
             Console.Clear();
             Console.WriteLine($"Jogador atual: {jogador.Nome}");
@@ -205,7 +203,7 @@ namespace RoubaMonte
         }
 
 
-        private void JogarPartida() // Iniciar partida com o log de partidas para salvar em um arquivo 
+        private void JogarPartida() 
         {
             using (var writer = new StreamWriter(logFilePath))
             {
@@ -214,15 +212,15 @@ namespace RoubaMonte
                 foreach (var jogador in jogadores)
                 {
                     writer.Write(jogador.Nome);
-                    if (jogador != jogadores.Last()) // Adiciona uma vírgula apenas se não for o último jogador
+                    if (jogador != jogadores.Last()) 
                     {
                         writer.Write(", ");
                     }
                 }
-                writer.WriteLine(); // Finaliza a linha
+                writer.WriteLine();
 
                 int jogadorAtual = 0;
-                while (monteCompra.ContarCartas() > 0) // Continua até o monte de compras acabar
+                while (monteCompra.ContarCartas() > 0)
                 {
                     Jogador jogador = jogadores[jogadorAtual];
 
@@ -231,37 +229,31 @@ namespace RoubaMonte
                     {
                         Carta cartaDaVez = monteCompra.Pop();
 
-                        // Exibe cartas no topo do jogador 
                         MostrarCartasTopo(jogador);
 
-                        // Se o jogador não tiver nenhuma carta, pega a carta da vez e passa para o próximo
                         if (jogador.Monte.Count == 0)
                         {
                             jogador.Monte.Push(cartaDaVez);
                             Console.WriteLine($"{jogador.Nome} não tinha cartas. Pegou a carta {cartaDaVez.DescreverCarta()} e passou a vez.");
                             writer.WriteLine($"{jogador.Nome} não tinha cartas. Pegou a carta {cartaDaVez.DescreverCarta()} e passou a vez.");
 
-                            continuarJogando = false; // Não continua jogando
+                            continuarJogando = false; 
                         }
                         else
                         {
-                            // Exibe estado atual
                             ExibirEstadoAtual(jogador, cartaDaVez);
                             writer.WriteLine($"{jogador.Nome} retirou a carta {cartaDaVez.DescreverCarta()}.");
 
-                            // Processa a jogada
                             continuarJogando = ProcessarJogada(jogador, cartaDaVez, writer);
 
-                            // Se a jogada não for válida, descarta a carta
                             if (!continuarJogando)
                             {
                                 areaDescarte.Add(cartaDaVez);
                                 writer.WriteLine($"{jogador.Nome} descartou a carta {cartaDaVez.DescreverCarta()}.");
                             }
                         }
-                    } while (continuarJogando && monteCompra.ContarCartas() > 0); // Continua enquanto a jogada permitir e houver cartas no monte
+                    } while (continuarJogando && monteCompra.ContarCartas() > 0);                    
 
-                    // Passa para o próximo jogador
                     jogadorAtual = (jogadorAtual + 1) % jogadores.Count;
                 }
 
@@ -313,7 +305,6 @@ namespace RoubaMonte
             int maiorMonte = 0;
             List<Jogador> vencedores = new List<Jogador>();
 
-            // Determina o maior número de cartas e os vencedores
             foreach (var jogador in jogadores)
             {
                 jogador.AtualizarQuantidadeDeCartas();
@@ -321,7 +312,7 @@ namespace RoubaMonte
                 if (jogador.QuantidadeCartas > maiorMonte)
                 {
                     maiorMonte = jogador.QuantidadeCartas;
-                    vencedores.Clear(); // Limpa a lista, pois há um novo maior monte
+                    vencedores.Clear(); 
                     vencedores.Add(jogador);
                 }
                 else if (jogador.QuantidadeCartas == maiorMonte)
@@ -330,21 +321,18 @@ namespace RoubaMonte
                 }
             }
 
-            // Escreve os vencedores no arquivo
             writer.WriteLine("Resultado da partida:");
             foreach (var vencedor in vencedores)
             {
                 writer.WriteLine($"{vencedor.Nome} venceu com {vencedor.QuantidadeCartas} cartas.");
             }
 
-            // Organiza os jogadores em ordem decrescente e exibe o ranking final
             for (int i = 0; i < jogadores.Count - 1; i++)
             {
                 for (int j = i + 1; j < jogadores.Count; j++)
                 {
                     if (jogadores[i].QuantidadeCartas < jogadores[j].QuantidadeCartas)
                     {
-                        // Troca de posição
                         var temp = jogadores[i];
                         jogadores[i] = jogadores[j];
                         jogadores[j] = temp;
@@ -365,19 +353,15 @@ namespace RoubaMonte
 
         private bool ProcessarJogada(Jogador jogador, Carta cartaDaVez, StreamWriter writer)
         {
-            // 1. Verifica se pode roubar o monte de outro jogador
             Jogador monteParaRoubar = null;
             int maiorMonte = -1;
 
             foreach (var j in jogadores)
             {
-                // Verifica se não é o jogador atual e se o monte do jogador tem cartas
                 if (j != jogador && j.Monte.Count != 0)
                 {
-                    // Verifica se a carta no topo do monte tem o mesmo número da carta da vez
                     if (j.Monte.Peek().Numero == cartaDaVez.Numero)
                     {
-                        // Se tiver salva e verifica os outros so ira passar aquele que tiver combinando e com o maior monte 
                         if (j.Monte.Count > maiorMonte)
                         {
                             monteParaRoubar = j;
@@ -387,7 +371,7 @@ namespace RoubaMonte
                 }
             }
 
-            if (monteParaRoubar != null)//Entra se tiver algum monte que o jogador pode roubar 
+            if (monteParaRoubar != null) 
             {
                 while (monteParaRoubar.Monte.Count != 0)
                 {
@@ -400,17 +384,16 @@ namespace RoubaMonte
                 return true;
             }
 
-            // 2. Verifica se a carta está na área de descarte
             Carta cartaDescarte = null;
             foreach (var carta in areaDescarte)
             {
                 if (carta.Numero == cartaDaVez.Numero)
                 {
                     cartaDescarte = carta;
-                    break;//Carta estando na area de descartas sai 
+                    break;
                 }
             }
-            if (cartaDescarte != null) // entra nesse if se o jogador a carta da ves estiver na area de descarte e pega ela retornando true 
+            if (cartaDescarte != null) 
             {
                 jogador.Monte.Push(cartaDescarte);
                 areaDescarte.Remove(cartaDescarte);
@@ -420,7 +403,6 @@ namespace RoubaMonte
                 return true;
             }
 
-            //  Verifica se a carta é igual ao topo do próprio monte
             if (jogador.Monte.Count == 0 && jogador.Monte.Peek().Numero == cartaDaVez.Numero)
             {
                 jogador.Monte.Push(cartaDaVez);
@@ -448,7 +430,6 @@ namespace RoubaMonte
             {
                 if (jogadores.Count == 0)
                 {
-                    // Solicita a quantidade de jogadores apenas na primeira vez
                     Console.WriteLine("Quantos jogadores participarão?");
                     int quantidadeJogadores = int.Parse(Console.ReadLine());
 
@@ -458,7 +439,6 @@ namespace RoubaMonte
                         quantidadeJogadores = int.Parse(Console.ReadLine());
                     }
 
-                    // Cria os jogadores
                     for (int i = 1; i <= quantidadeJogadores; i++)
                     {
                         Console.Write($"Nome do jogador {i}: ");
@@ -475,7 +455,6 @@ namespace RoubaMonte
                     quantidadeBaralhos = int.Parse(Console.ReadLine());
                 }
 
-                // Inicia um novo jogo com os jogadores existentes e a nova quantidade de baralhos
                 Jogo jogo = new Jogo(jogadores, quantidadeBaralhos);
                 jogo.Iniciar();
                 Console.Clear();
@@ -504,6 +483,7 @@ namespace RoubaMonte
             int escolha = int.Parse(Console.ReadLine());
             Console.WriteLine($"Mostrando o ranking das últimas 5 partidas do jogador: {jogadores[escolha - 1].Nome}");
             jogadores[escolha - 1].MostrarRanking();
+            Console.ReadLine(); 
         }
     }
     
@@ -616,3 +596,9 @@ namespace RoubaMonte
     }
 }
 
+
+
+
+
+
+   
